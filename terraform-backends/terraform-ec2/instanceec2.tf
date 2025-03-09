@@ -69,17 +69,8 @@ resource "aws_security_group" "myzplus" {
   
 }
 
-variable "ec2_instance_count" {
-    description = "This is count of EC2 we are going to create"
-  default = 2
-}
 
-locals {
-  insatnce = {
-    key1 = "Instance_1"
-    key2 = "Instance_2"
-  }
-}
+
 
 resource "aws_instance" "myec2" {
     
