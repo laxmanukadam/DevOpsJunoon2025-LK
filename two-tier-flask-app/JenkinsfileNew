@@ -1,0 +1,75 @@
+@Library("shared") _
+pipeline{
+    agent { label "dev"};
+    stages{
+        stage("Code"){
+            steps{
+                
+                // git url: "https://github.com/laxmanukadam/two-tier-flask-app.git" , branch: "master"
+                // The shared library is used here to clone the repo.
+                script{
+                    clone("https://github.com/laxmanukadam/two-tier-flask-app.git","master")
+                }
+                echo "Code closed successfully"
+            }
+        } 
+        stage("Trivy File System Scan"){
+            
+            steps{
+                sh " trivy fs . -o results.json"
+                echo "Trivy file scan completed"
+            }
+            
+        }
+        stage("Build"){
+            steps{
+                sh "docker build -t two-tier-flask-app ."
+                echo "Code build successfully"
+            }
+        }
+        stage("Test"){
+            steps{
+                echo "Code tested successfully"
+            }
+        }
+        stage("Push to Github"){
+            
+            steps{
+                script{
+                    dockerpush("DockerHubCred","two-tier-flask-app")
+                }
+               
+            }
+        }
+        
+        stage("Deploy"){
+            steps{
+                sh "docker compose up -d --build flask-app"
+                echo "Code deployed successfully"
+                echo "Changes got picked from JenkinsfileNew and executing on worker node"
+            }
+        }
+    }
+
+post{
+        success{
+            script{
+                emailext from: 'laxmanukadam@gmail.com',
+                to: 'laxmanukadam@gmail.com',
+                body: 'Build success for Demo CICD App',
+                subject: 'Build success for Demo CICD App'
+            }
+            
+        }
+        failure{
+            script{
+                    emailext from: 'laxmanukadam@gmail.com',
+                    to: 'laxmanukadam@gmail.com',
+                    body: 'Build Failed for Demo CICD App',
+                    subject: 'Build Failed for Demo CICD App'
+            }
+            
+        }
+    }
+
+}
